@@ -1,0 +1,15 @@
+{
+  "name": "require-regexp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "require-regexp.js",
+  "dependencies": {
+    "is-regex": "^1.0.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "omri eyal",
+  "license": "ISC"
+}
