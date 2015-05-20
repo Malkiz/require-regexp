@@ -4,10 +4,10 @@ var fs = require('fs'),
 
 module.exports = loadRegex;
 
-function loadRegex(regex, dirpath) {
+function loadRegex(regex, dirpaths) {
 	regex = toRegex(regex);
-	dirpath = toPath(dirpath);
-	var matches = getMatches(regex, dirpath);
+	dirpaths = toPaths(dirpaths);
+	var matches = getMatches(regex, dirpaths);
 	var map = {};
 	matches.forEach(function (name) {
 		var module = load(name);
@@ -35,6 +35,13 @@ function toRegex(regex) {
 	return new RegExp(regex);
 }
 
+function toPaths(val) {
+	if (typeof val !== 'object' || !val.hasOwnProperty('length')) {
+		val = [val];
+	}
+	return val.map(toPath);
+}
+
 function toPath(str) {
 	var p = path.normalize(str);
 	if (!fs.statSync(p).isDirectory()) {
@@ -43,8 +50,10 @@ function toPath(str) {
 	return p;
 }
 
-function getMatches(regex, dirpath) {
-	return fs.readdirSync(dirpath).filter(function (name) {
-		return regex.test(name);
-	});
+function getMatches(regex, dirpaths) {
+	return dirpaths.reduce(function (ret, dirpath) {
+		return ret.concat(fs.readdirSync(dirpath).filter(function (name) {
+			return regex.test(name);
+		}));
+	}, []);
 }
