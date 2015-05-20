@@ -5,8 +5,8 @@ var fs = require('fs'),
 module.exports = loadRegex;
 
 function loadRegex(regexs, dirpaths) {
-	regexs = toArray(regexs).map(toRegex);
-	dirpaths = toArray(dirpaths).map(toPath);
+	regexs = toArray(regexs).map(toRegex).filter(exists);
+	dirpaths = toArray(dirpaths).map(toPath).filter(exists);
 	var matches = getMatches(regexs, dirpaths);
 	var map = {};
 	matches.forEach(function (m) {
@@ -53,11 +53,20 @@ function toArray(val) {
 }
 
 function toPath(str) {
-	var p = path.normalize(str);
-	if (!fs.statSync(p).isDirectory()) {
-		p = path.dirname(p);
+	var p;
+	try {
+		p = path.normalize(str);
+		if (!fs.statSync(p).isDirectory()) {
+			p = path.dirname(p);
+		}
+	} catch (e) {
+		p = undefined;
 	}
 	return p;
+}
+
+function exists(val) {
+	return !!val;
 }
 
 function getMatches(regexs, dirpaths) {
