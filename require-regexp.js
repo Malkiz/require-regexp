@@ -4,24 +4,34 @@ var fs = require('fs'),
 
 module.exports = loadRegex;
 
-function loadRegex(regex, dirpaths) {
-	regex = toRegex(regex);
-	dirpaths = toPaths(dirpaths);
-	var matches = getMatches(regex, dirpaths);
+function loadRegex(regexs, dirpaths) {
+	regexs = toArray(regexs).map(toRegex);
+	dirpaths = toArray(dirpaths).map(toPath);
+	var matches = getMatches(regexs, dirpaths);
 	var map = {};
-	matches.forEach(function (name) {
-		var module = load(name);
+	matches.forEach(function (m) {
+		var module = load(m);
 		if (module !== undefined) {
-			map[name] = module;
+			setProp(map, [m.name, path.join(m.dir, m.name)], module);
 		}
 	});
 	return map;
 }
 
-function load(name) {
+function setProp(obj, props, val) {
+	for (var i = 0; i < props.length; i++) {
+		var name = props[i];
+		if (!obj.hasOwnProperty(name)) {
+			obj[name] = val;
+			return;
+		}
+	}
+}
+
+function load(m) {
 	var module;
 	try {
-		module = require(name);
+		module = require(path.join(m.dir, m.name));
     } catch (e) {
     	module = undefined;
     }
@@ -35,11 +45,11 @@ function toRegex(regex) {
 	return new RegExp(regex);
 }
 
-function toPaths(val) {
+function toArray(val) {
 	if (typeof val !== 'object' || !val.hasOwnProperty('length')) {
 		val = [val];
 	}
-	return val.map(toPath);
+	return val;
 }
 
 function toPath(str) {
@@ -50,10 +60,14 @@ function toPath(str) {
 	return p;
 }
 
-function getMatches(regex, dirpaths) {
+function getMatches(regexs, dirpaths) {
 	return dirpaths.reduce(function (ret, dirpath) {
 		return ret.concat(fs.readdirSync(dirpath).filter(function (name) {
-			return regex.test(name);
+			return regexs.reduce(function (found, regex) {
+				return found || regex.test(name);
+			}, false);
+		}).map(function (name) {
+			return {dir : dirpath, name: name};
 		}));
 	}, []);
 }
