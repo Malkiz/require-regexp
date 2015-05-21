@@ -5,6 +5,10 @@ var fs = require('fs'),
 module.exports = loadRegex;
 
 function loadRegex(regexs, dirpaths) {
+	if (!regexs || !dirpaths) {
+		return {};
+	}
+
 	regexs = toArray(regexs).map(toRegex).filter(exists);
 	dirpaths = toArray(dirpaths).map(toPath).filter(exists);
 	var matches = getMatches(regexs, dirpaths);
